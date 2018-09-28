@@ -2,6 +2,9 @@
 *.hex
 *.elf
 *.o
+*.mp4
+*.jpg
+*.bin
 debug
 release
 *.release

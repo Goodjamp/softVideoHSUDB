@@ -168,7 +168,6 @@ bool hidInterface::openInterface(uint VID, uint PID)
 {
     HIDD_ATTRIBUTES tempHidAtributes;
     uint16_t k;
-    uint8_t cnt = 0;
     std::wstring pathString;
     if(currentHID != 0 ) //class interface should be free
     {

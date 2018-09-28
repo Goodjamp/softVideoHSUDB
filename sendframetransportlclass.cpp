@@ -26,7 +26,6 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
 {
     uint32_t sizeTx;
     uint32_t rezNumTx;
-    uint32_t rezNumRx;
     QVector<uint8_t> txBuffer(PACKET_SIZE);
     union
     {
