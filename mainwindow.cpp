@@ -8,7 +8,7 @@
 
 #include "mainParDescriptions.h"
 
-#include "mcsprotocolclass.h"
+#include "sendframeprotocolclass.h"
 //#include "mcstransportclass.h"
 #include "communicationclass.h"
 #include "hidinterface.h"
@@ -20,9 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     /*************INITILISATION USER INTERFACE**************/
-
-    QStringList lisdDeviceAddress = LIST_OF_DEVICE_ADDRESS;
-
 
     //set fixed size of main window
     setFixedSize(WIN_WEIGH, WIN_HEIGHT);
@@ -37,13 +34,13 @@ MainWindow::MainWindow(QWidget *parent) :
     userHID = new hidInterface();
 
     /*************INITILISATION COMMUNICATION STACK******************/
-    mcsProtocol  = new mcsProtocolClass();
+    mcsProtocol  = new sendFrameProtocolClass();
     mcsTransport = new communicationClass(userHID);
 
-    connect(mcsProtocol,  &mcsProtocolClass::signalSendCommand,       mcsTransport, &communicationClass::slotSendCommand);
-    connect(mcsTransport, &communicationClass::signalReceive,         mcsProtocol,  &mcsProtocolClass::slotCommandRxResp);
-    connect(mcsProtocol,  &mcsProtocolClass::signalReadRegisterResp,  this,         &MainWindow::slotReadRegisters);
-    connect(mcsProtocol,  &mcsProtocolClass::signalWriteRegisterResp, this,         &MainWindow::slotWriteRegisters);
+    connect(mcsProtocol,  &sendFrameProtocolClass::signalSendCommand,       mcsTransport, &communicationClass::slotSendCommand);
+    connect(mcsTransport, &communicationClass::signalReceive,         mcsProtocol,  &sendFrameProtocolClass::slotCommandRxResp);
+    connect(mcsProtocol,  &sendFrameProtocolClass::signalReadRegisterResp,  this,         &MainWindow::slotReadRegisters);
+    connect(mcsProtocol,  &sendFrameProtocolClass::signalWriteRegisterResp, this,         &MainWindow::slotWriteRegisters);
 
     /*************STACK INITILISATION******************************/
 }
@@ -58,7 +55,8 @@ void MainWindow::setDeviseOpenUIState(void)
 {
     ui->pushButtonOpenDevice->setDisabled(true);
     ui->pushButtonCloseDevice->setEnabled(true);
-    ui->pushButtonSendCommand->setEnabled(true);
+    ui->pushButtonStop->setEnabled(true);
+    ui->pushButtonPlay->setEnabled(true);
 }
 
 
@@ -66,7 +64,8 @@ void MainWindow::setDeviseCloseUIState(void)
 {
     ui->pushButtonOpenDevice->setEnabled(true);
     ui->pushButtonCloseDevice->setDisabled(true);
-    ui->pushButtonSendCommand->setDisabled(true);
+    ui->pushButtonStop->setDisabled(true);
+    ui->pushButtonPlay->setDisabled(true);
 }
 
 
@@ -82,13 +81,13 @@ void MainWindow::messageErrorWindowShow(QString errorString)
 
 
 
-void MainWindow::slotReadRegisters(mcsProtocolClass::STATUS_RES statusResp, QVector<uint8_t> registers)
+void MainWindow::slotReadRegisters(sendFrameProtocolClass::STATUS_RES statusResp, QVector<uint8_t> registers)
 {
 
 }
 
 
-void MainWindow::slotWriteRegisters(mcsProtocolClass::STATUS_RES statusResp)
+void MainWindow::slotWriteRegisters(sendFrameProtocolClass::STATUS_RES statusResp)
 {
 
 }
@@ -139,6 +138,8 @@ void MainWindow::on_pushButtonCloseDevice_clicked()
 void MainWindow::sendFrame()
 {
     // read next frame from video and send to protocol class
+    QVector<uint8_t> frame(12);
+    mcsProtocol->sendFrameCommand(frame, 12);
 }
 
 

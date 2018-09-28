@@ -8,14 +8,14 @@
 #include <QVector>
 #include <QTimer>
 
-#include "mcstransportclass.h"
+#include "sendframetransportlclass.h"
+#define START_IND_SUMBOL  "START"
 
-
-class mcsProtocolClass: public QObject
+class sendFrameProtocolClass: public QObject
 {
     Q_OBJECT
 public:
-    mcsProtocolClass();
+    sendFrameProtocolClass();
 
 public:
     // rezults of processing command
@@ -26,7 +26,7 @@ public:
     }STATUS_RES;
 
     /****************LIST OF COMMAND*********************/
-    bool sendFrame(QVector<uint8_t> frame);
+    bool sendFrameCommand(QVector<uint8_t> frame, uint32_t frameSize);
 
 signals:
     //signal to next level
@@ -39,17 +39,17 @@ signals:
 private:
 
     typedef enum{
-        SEND_FRAME      = (uint8_t)0,
+        SEND_FRAME  = (uint8_t)0,
     }COMMAND_LIST;
 
 
     #pragma pack(push,1)
     typedef struct
     {
-        uint8_t commandId;
-        uint8_t status;
+        uint8_t commandMarker[sizeof(START_IND_SUMBOL) - 1];
+        uint32_t size;
         uint8_t payload[];
-    } rspT;
+    } sendFrameCommandT;
     #pragma pack(pop)
 
 /*****PRIVATE PROPERTYS DEFINITIONS****/

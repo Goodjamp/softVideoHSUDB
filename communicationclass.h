@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QVector>
 
-#include "mcstransportclass.h"
+#include "sendframetransportlclass.h"
 #include "hidInterface.h"
 
 
@@ -24,8 +24,8 @@ public slots:
 private:
 
     void run();
-    hidInterface *userInterface;
-    mcsTransportClass *mcsTransport;
+    hidInterface             *userInterface;
+    sendFrameTransportlClass *mcsTransport;
 
 signals:
     void signalSend(QVector<uint8_t> command);

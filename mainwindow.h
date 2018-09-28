@@ -6,7 +6,7 @@
 #include <QSemaphore>
 
 #include "hidinterface.h"
-#include "mcsprotocolclass.h"
+#include "sendframeprotocolclass.h"
 #include "communicationclass.h"
 
 namespace Ui {
@@ -33,9 +33,9 @@ private slots:
 
     // MCS processing clots description
 
-    void slotReadRegisters(mcsProtocolClass::STATUS_RES statusResp, QVector<uint8_t> registers);
+    void slotReadRegisters(sendFrameProtocolClass::STATUS_RES statusResp, QVector<uint8_t> registers);
 
-    void slotWriteRegisters(mcsProtocolClass::STATUS_RES statusResp);
+    void slotWriteRegisters(sendFrameProtocolClass::STATUS_RES statusResp);
 
 private:
     void messageErrorWindowShow(QString errorString);
@@ -52,7 +52,7 @@ private:
 
     hidInterface       *userHID;
 
-    mcsProtocolClass   *mcsProtocol;
+    sendFrameProtocolClass   *mcsProtocol;
 
     communicationClass *mcsTransport;
 

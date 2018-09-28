@@ -14,17 +14,17 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
            mainwindow.cpp \
-    mcstransportclass.cpp \
-    mcsprotocolclass.cpp \
     hidinterface.cpp \
-    communicationclass.cpp
+    communicationclass.cpp \
+    sendframetransportlclass.cpp \
+    sendframeprotocolclass.cpp
 
 HEADERS += mainwindow.h \
            mainParDescriptions.h \
-    mcstransportclass.h \
-    mcsprotocolclass.h \
     hidinterface.h \
-    communicationclass.h
+    communicationclass.h \
+    sendframeprotocolclass.h \
+    sendframetransportlclass.h
 
 FORMS   += mainwindow.ui
 
