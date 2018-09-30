@@ -37,6 +37,8 @@ private slots:
 
     void slotWriteRegisters(sendFrameProtocolClass::STATUS_RES statusResp);
 
+    void on_pushButton_clicked();
+
 private:
     void messageErrorWindowShow(QString errorString);
 
@@ -55,6 +57,11 @@ private:
     sendFrameProtocolClass   *mcsProtocol;
 
     communicationClass *mcsTransport;
+
+    struct{
+        QString  path;
+        uint32_t orderNumber;
+    }playState;
 
     //address of first register in READ_REGISTER command
     int  readRegAddress;

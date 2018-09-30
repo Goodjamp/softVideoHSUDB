@@ -5,6 +5,7 @@
 #include "QFileDialog"
 #include "QRegularExpression"
 #include "QMessageBox"
+#include "stdio.h"
 
 #include "mainParDescriptions.h"
 
@@ -12,6 +13,11 @@
 //#include "mcstransportclass.h"
 #include "communicationclass.h"
 #include "hidinterface.h"
+
+/*
+system("VideoRead.py C:\\");
+*/
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -55,8 +61,8 @@ void MainWindow::setDeviseOpenUIState(void)
 {
     ui->pushButtonOpenDevice->setDisabled(true);
     ui->pushButtonCloseDevice->setEnabled(true);
-    ui->pushButtonStop->setEnabled(true);
-    ui->pushButtonPlay->setEnabled(true);
+    //ui->pushButtonStop->setEnabled(true);
+    //ui->pushButtonPlay->setEnabled(true);
 }
 
 
@@ -64,8 +70,8 @@ void MainWindow::setDeviseCloseUIState(void)
 {
     ui->pushButtonOpenDevice->setEnabled(true);
     ui->pushButtonCloseDevice->setDisabled(true);
-    ui->pushButtonStop->setDisabled(true);
-    ui->pushButtonPlay->setDisabled(true);
+    //ui->pushButtonStop->setDisabled(true);
+    //ui->pushButtonPlay->setDisabled(true);
 }
 
 
@@ -108,26 +114,6 @@ void MainWindow::on_pushButtonOpenDevice_clicked()
 }
 
 
-/*
-uint8_t writeBuff[32 + 1] = {0,21,31,41,51,61};
-uint8_t readBuff[32 + 1];
-uint32_t numRead = 0;
-
-
-void MainWindow::on_pushButtonSend_clicked()
-{
-     userHID->write(writeBuff, 60 + 1, 1);
-}
-
-
-void MainWindow::on_pushButtonReceive_clicked()
-{
-    numRead = userHID->read(writeBuff, 61, 1);
-    qDebug()<<"Reaz Read "<< numRead<<"\n";
-    qDebug()<<"data: "<< writeBuff[0]<<" "<< writeBuff[1]<<" "<< writeBuff[2]<<" "<< writeBuff[3]<<" "<<"\n";
-}
-*/
-
 void MainWindow::on_pushButtonCloseDevice_clicked()
 {
     userHID->closeInterface();
@@ -137,28 +123,53 @@ void MainWindow::on_pushButtonCloseDevice_clicked()
 
 void MainWindow::sendFrame()
 {
+    size_t fileSize = 0;
     // read next frame from video and send to protocol class
-    QVector<uint8_t> frame(12);
-    mcsProtocol->sendFrameCommand(frame, 12);
+    QString framePath = playState.path + QString::number(playState.orderNumber) + FRAME_EXTENTION;
+    qDebug()<<"Current frame path:"<< framePath;
+    FILE *frameFile = fopen(framePath.toUtf8(),"rb");
+    if(frameFile == NULL)
+    {
+        qDebug()<<"Error Or last video frame was reading";
+        ui->pushButtonPlay->setEnabled(true);
+        ui->pushButtonStop->setEnabled(false);
+        return;
+    }
+    // get size of file
+    fseek(frameFile, 0, SEEK_END);
+    fileSize = ftell(frameFile);
+    fseek(frameFile, 0, SEEK_SET);
+    fclose(frameFile);
+    qDebug()<<"frame open close OK, file size = "<<fileSize;
+    QVector<uint8_t> videoFrame(fileSize);
+    fread(videoFrame.begin(), sizeof(uint8_t), fileSize, frameFile);
+    mcsProtocol->sendFrameCommand(videoFrame, fileSize);
 }
 
 
 void MainWindow::on_pushButtonPlay_clicked()
 {
-    /*
-    #define SIZE_RX_BUFFER   (512 * 32)
-    QVector<uint8_t> testVetor(SIZE_RX_BUFFER);
-    for(uint32_t cnt = 0; cnt < SIZE_RX_BUFFER; cnt++)
-    {
-    testVetor[cnt] = cnt;
-    }
-    //mcsProtocol->sendToTransport(testVetor);
-*/
+    playState.orderNumber = 0;
     // TODO run timer !!
+
+    playState.path = QDir::currentPath() + FRAME_FILE_NAME;
+    qDebug()<<playState.path;
     sendFrame();
 }
+
 
 void MainWindow::on_pushButtonStop_clicked()
 {
 
+}
+
+
+void MainWindow::on_pushButton_clicked()
+{
+    QFileDialog openDialog;
+    openDialog.setModal(true);
+    QString filePath = openDialog.getOpenFileName();
+    QString runPythonStr = "VideoRead.py " + filePath;
+    qDebug()<<runPythonStr;
+    system(runPythonStr.toLocal8Bit());
 }

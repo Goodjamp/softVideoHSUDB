@@ -12,6 +12,9 @@
 #define ERROR_COMMUNICATION_ERROR_STRING   "Communication Error!"
 #define ERROR_COMMUNICATION_BUSY_STRING    "Communication Busy!"
 #define ERROR_OPEN_DEVICE_NOT_FOUND        "Device was not found"
+#define FRAME_FILE_NAME                    "/data/rawFrame565_"
+#define FRAME_EXTENTION                    ".bin"
+
 
 
 #define WIN_HEIGHT  200
