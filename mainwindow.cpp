@@ -139,10 +139,10 @@ void MainWindow::sendFrame()
     fseek(frameFile, 0, SEEK_END);
     fileSize = ftell(frameFile);
     fseek(frameFile, 0, SEEK_SET);
-    fclose(frameFile);
     qDebug()<<"frame open close OK, file size = "<<fileSize;
     QVector<uint8_t> videoFrame(fileSize);
-    fread(videoFrame.begin(), sizeof(uint8_t), fileSize, frameFile);
+    fread((uint8_t*)videoFrame.begin(), sizeof(uint8_t), fileSize, frameFile);
+    fclose(frameFile);
     mcsProtocol->sendFrameCommand(videoFrame, fileSize);
 }
 

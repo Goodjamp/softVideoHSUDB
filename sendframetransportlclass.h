@@ -9,7 +9,7 @@
 
 #include "hidInterface.h"
 
-#define PACKET_SIZE              256U
+#define PACKET_SIZE              128U
 #define TRANSACTION_TIMEOUT      2
 
 class sendFrameTransportlClass: public QObject
@@ -36,6 +36,7 @@ private:
     }transportPaketT;
     hidInterface *comInterface;
     const uint16_t payloadMaxPacketSize = static_cast<uint16_t>(PACKET_SIZE) - static_cast<uint16_t>(sizeof(transportPaketT));
+    const uint16_t transportHeadSize = static_cast<uint16_t>(sizeof(transportPaketT));
 };
 
 #endif // MCSTRANSPORTCLASS_H
