@@ -12,3 +12,5 @@ release
 *.autosave
 *debug
 *release
+*.user
+builds
