@@ -15,10 +15,10 @@ sendFrameTransportlClass::sendFrameTransportlClass(hidInterface *comInterfaceIn)
 
 uint32_t sendFrameTransportlClass::fillPacket(uint8_t *buffer, uint8_t *data, uint16_t quantityPacket, uint16_t packetNumber, uint16_t rest)
 {
-    uint16_t sendDataLength =  (packetNumber == quantityPacket + 1) ?
+    uint16_t sendDataLength =  ((packetNumber + 1) == quantityPacket) ?
                                (rest) :
                                (payloadMaxPacketSize);
-     memcpy(buffer, data + (packetNumber - 1) * payloadMaxPacketSize, sendDataLength);
+     memcpy(buffer, data + packetNumber * payloadMaxPacketSize, sendDataLength);
      return sendDataLength + transportHeadSize;
 }
 
@@ -35,9 +35,10 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
     {
         .buffer = txBuffer.begin()
     };
-    reqCommand.packet->packetNumber = 0;
-    reqCommand.packet->quantityPacket = static_cast<uint16_t>(command.size() / payloadMaxPacketSize);
-    reqCommand.packet->rest           = static_cast<uint16_t>(command.size() %  payloadMaxPacketSize);
+    reqCommand.packet->packetNumber   = 0;
+    reqCommand.packet->rest           = static_cast<uint16_t>(command.size() % payloadMaxPacketSize);
+    reqCommand.packet->quantityPacket = (reqCommand.packet->rest == 0) ? (static_cast<uint16_t>(command.size() / payloadMaxPacketSize)):
+                                                                         (static_cast<uint16_t>(command.size() / payloadMaxPacketSize) + 1);
     sizeTx = fillPacket(reqCommand.packet->payload,
                         (uint8_t*)command.begin(),
                         reqCommand.packet->quantityPacket,
@@ -48,8 +49,7 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
     // send command request
     while(true)
     {   
-
-        rezNumTx = comInterface->write(static_cast<uint8_t*>(command.begin()), sizeTx, TRANSACTION_TIMEOUT);
+        rezNumTx = comInterface->write(reqCommand.buffer, PACKET_SIZE, TRANSACTION_TIMEOUT);
         qDebug()<<"Packet Number = "<< reqCommand.packet->packetNumber<<"Num Tx ="<<rezNumTx;
         if( rezNumTx < sizeTx)
         {
@@ -62,7 +62,7 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
                                     TRANSACTION_TIMEOUT);
         */
         reqCommand.packet->packetNumber++;
-        if(reqCommand.packet->packetNumber >= reqCommand.packet->quantityPacket)
+        if(reqCommand.packet->packetNumber  >= reqCommand.packet->quantityPacket)
         {
             break;
         }
