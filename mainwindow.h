@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QStringListModel>
 #include <QSemaphore>
+#include <QTimer>
 
 #include "hidinterface.h"
 #include "sendframeprotocolclass.h"
@@ -39,6 +40,10 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_pushButtonFrameByFrame_clicked();
+
+    void on_pushButtonPause_clicked();
+
 private:
     void messageErrorWindowShow(QString errorString);
 
@@ -46,7 +51,13 @@ private:
 
     void setDeviseCloseUIState(void);
 
+    void setDevisePlayUIState(void);
+
+    void setDeviseStopUIState(void);
+
     void sendFrame();
+
+    void frameSendTimeout();
 
 private:
 
@@ -56,11 +67,14 @@ private:
 
     sendFrameProtocolClass   *mcsProtocol;
 
+    QTimer *frameTimer;
+
     communicationClass *mcsTransport;
 
     struct{
         QString  path;
         uint32_t orderNumber;
+        bool     playState;
     }playState;
 
     //address of first register in READ_REGISTER command

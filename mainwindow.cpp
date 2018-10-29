@@ -5,6 +5,7 @@
 #include "QFileDialog"
 #include "QRegularExpression"
 #include "QMessageBox"
+#include "QTimer"
 #include "stdio.h"
 
 #include "mainParDescriptions.h"
@@ -14,9 +15,7 @@
 #include "communicationclass.h"
 #include "hidinterface.h"
 
-/*
-system("VideoRead.py C:\\");
-*/
+
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -49,6 +48,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mcsProtocol,  &sendFrameProtocolClass::signalWriteRegisterResp, this,         &MainWindow::slotWriteRegisters);
 
     /*************STACK INITILISATION******************************/
+    frameTimer = new QTimer(this);
+    frameTimer->setInterval(40);
+    connect(frameTimer, &QTimer::timeout, this, &MainWindow::frameSendTimeout);
 }
 
 MainWindow::~MainWindow()
@@ -57,12 +59,20 @@ MainWindow::~MainWindow()
 }
 
 
+void MainWindow::frameSendTimeout()
+{
+    frameTimer->stop();
+    sendFrame();
+    frameTimer->start();
+}
+
+
 void MainWindow::setDeviseOpenUIState(void)
 {
     ui->pushButtonOpenDevice->setDisabled(true);
     ui->pushButtonCloseDevice->setEnabled(true);
-    //ui->pushButtonStop->setEnabled(true);
-    //ui->pushButtonPlay->setEnabled(true);
+    ui->pushButtonStop->setEnabled(false);
+    ui->pushButtonPlay->setEnabled(true);
 }
 
 
@@ -70,8 +80,22 @@ void MainWindow::setDeviseCloseUIState(void)
 {
     ui->pushButtonOpenDevice->setEnabled(true);
     ui->pushButtonCloseDevice->setDisabled(true);
-    //ui->pushButtonStop->setDisabled(true);
-    //ui->pushButtonPlay->setDisabled(true);
+    ui->pushButtonStop->setDisabled(true);
+    ui->pushButtonPlay->setDisabled(true);
+}
+
+
+void MainWindow::setDevisePlayUIState(void)
+{
+    ui->pushButtonStop->setEnabled(false);
+    ui->pushButtonPlay->setEnabled(true);
+}
+
+
+void MainWindow::setDeviseStopUIState(void)
+{
+    ui->pushButtonStop->setEnabled(true);
+    ui->pushButtonPlay->setEnabled(false);
 }
 
 
@@ -131,36 +155,40 @@ void MainWindow::sendFrame()
     if(frameFile == NULL)
     {
         qDebug()<<"Error Or last video frame was reading";
-        ui->pushButtonPlay->setEnabled(true);
-        ui->pushButtonStop->setEnabled(false);
+        setDeviseStopUIState();
+        playState.playState =false;
+        frameTimer->stop();
         return;
     }
+    playState.playState =true;
     // get size of file
-    fseek(frameFile, 0, SEEK_END);
-    fileSize = ftell(frameFile);
-    fseek(frameFile, 0, SEEK_SET);
-    qDebug()<<"frame open close OK, file size = "<<fileSize;
-    QVector<uint8_t> videoFrame(fileSize);
-    fread((uint8_t*)videoFrame.begin(), sizeof(uint8_t), fileSize, frameFile);
+    //fseek(frameFile, 0, SEEK_END);
+    //fileSize = ftell(frameFile);
+    //fseek(frameFile, 0, SEEK_SET);
+    //qDebug()<<"frame open close OK, file size = "<<fileSize;
+    static QVector<uint8_t> videoFrame(32768);
+    fread((uint8_t*)videoFrame.data(), sizeof(uint8_t), 32768, frameFile);
     fclose(frameFile);
-    mcsProtocol->sendFrameCommand(videoFrame, fileSize);
+    mcsProtocol->sendFrameCommand(videoFrame, 32768);
+    playState.orderNumber++;
 }
 
 
 void MainWindow::on_pushButtonPlay_clicked()
 {
     playState.orderNumber = 0;
-    // TODO run timer !!
-
     playState.path = QDir::currentPath() + FRAME_FILE_NAME;
     qDebug()<<playState.path;
     sendFrame();
+    frameTimer->start();
+    setDevisePlayUIState();
 }
 
 
 void MainWindow::on_pushButtonStop_clicked()
 {
-
+    setDeviseStopUIState();
+    frameTimer->stop();
 }
 
 
@@ -172,4 +200,14 @@ void MainWindow::on_pushButton_clicked()
     QString runPythonStr = "VideoRead.py " + filePath;
     qDebug()<<runPythonStr;
     system(runPythonStr.toLocal8Bit());
+}
+
+void MainWindow::on_pushButtonFrameByFrame_clicked()
+{
+
+}
+
+void MainWindow::on_pushButtonPause_clicked()
+{
+
 }

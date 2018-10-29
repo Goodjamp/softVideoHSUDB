@@ -22,11 +22,16 @@ uint32_t sendFrameTransportlClass::fillPacket(uint8_t *buffer, uint8_t *data, ui
      return sendDataLength + transportHeadSize;
 }
 
+
+#include "stdio.h"
+
+
 void sendFrameTransportlClass::process(QVector<uint8_t> command)
 {
     uint32_t sizeTx;
     uint32_t rezNumTx;
-    QVector<uint8_t> txBuffer(PACKET_SIZE);
+
+    static QVector<uint8_t> txBuffer(PACKET_SIZE);
     union
     {
         transportPaketT *packet;
@@ -40,7 +45,7 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
     reqCommand.packet->quantityPacket = (reqCommand.packet->rest == 0) ? (static_cast<uint16_t>(command.size() / payloadMaxPacketSize)):
                                                                          (static_cast<uint16_t>(command.size() / payloadMaxPacketSize) + 1);
     sizeTx = fillPacket(reqCommand.packet->payload,
-                        (uint8_t*)command.begin(),
+                        (uint8_t*)command.data(),
                         reqCommand.packet->quantityPacket,
                         reqCommand.packet->packetNumber,
                         reqCommand.packet->rest);
@@ -67,7 +72,7 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
             break;
         }
         sizeTx = fillPacket(reqCommand.packet->payload,
-                            (uint8_t*)command.begin(),
+                            (uint8_t*)command.data(),
                             reqCommand.packet->quantityPacket,
                             reqCommand.packet->packetNumber,
                             reqCommand.packet->rest);
@@ -77,3 +82,49 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
     //emit signalReceiveCommand(true, rxCommandBuffer);
 }
 
+
+
+/*
+
+
+
+    QString framePath_ = "C:\\Private\\Programing\\QT\\softVideoHSUDB\\build-softVideoHSUDB-Desktop_Qt_5_8_0_MinGW_32bit2-Debug\\data\\rawFrame565_0_.bin";
+    qDebug()<<"Current frame path:"<< framePath_;
+    FILE *frameFile_ = fopen(framePath_.toUtf8(),"wb");
+    for(uint16_t i = 0; i < 128; i++)
+    {
+        for(uint16_t j = 0; j < 128; j++)
+        {
+            uint16_t buffCollor = 0;
+            if((i == 3*j) || (i == 127 - j))
+            {
+                buffCollor = 0xffff;
+            }
+            if((j == 32) || (j == 64)|| (j == 125))
+            {
+                buffCollor = 0xffff;
+            }
+            if((i == 32) || (i == 64)|| (i == 125))
+            {
+                buffCollor = 0xffff;
+            }
+            fwrite(&buffCollor, 2, 1, frameFile_);
+        }
+    }
+    fclose(frameFile_);
+
+
+    FILE *frameFile = fopen(framePath_.toUtf8(),"rb");
+   // QVector<uint8_t> videoFrame(32768);
+    fread((uint8_t*)command.data(), sizeof(uint8_t), 32768, frameFile);
+    fclose(frameFile);
+
+    QString framePath = "C:\\Private\\Programing\\QT\\softVideoHSUDB\\build-softVideoHSUDB-Desktop_Qt_5_8_0_MinGW_32bit2-Debug\\data\\rawFrame565_0.bin";
+    frameFile = fopen(framePath.toUtf8(),"rb");
+
+    static uint8_t data_[32768];
+
+    fread(data_, sizeof(uint8_t), 32768, frameFile);
+    fclose(frameFile);
+
+*/
