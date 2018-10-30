@@ -62,6 +62,10 @@ MainWindow::~MainWindow()
 void MainWindow::frameSendTimeout()
 {
     frameTimer->stop();
+    if(playerState.state != PLAYER_PLAY)
+    {
+        return;
+    }
     sendFrame();
     frameTimer->start();
 }
@@ -69,34 +73,46 @@ void MainWindow::frameSendTimeout()
 
 void MainWindow::setDeviseOpenUIState(void)
 {
-    ui->pushButtonOpenDevice->setDisabled(true);
+    ui->pushButtonOpenDevice->setEnabled(false);
     ui->pushButtonCloseDevice->setEnabled(true);
-    ui->pushButtonStop->setEnabled(false);
-    ui->pushButtonPlay->setEnabled(true);
+    setDeviseStopUIState();
 }
 
 
 void MainWindow::setDeviseCloseUIState(void)
 {
     ui->pushButtonOpenDevice->setEnabled(true);
-    ui->pushButtonCloseDevice->setDisabled(true);
-    ui->pushButtonStop->setDisabled(true);
-    ui->pushButtonPlay->setDisabled(true);
+    ui->pushButtonCloseDevice->setEnabled(false);
+    ui->pushButtonStop->setEnabled(false);
+    ui->pushButtonPause->setEnabled(false);
+    ui->pushButtonPlay->setEnabled(false);
+    ui->pushButtonFrameByFrame->setEnabled(false);
 }
 
 
 void MainWindow::setDevisePlayUIState(void)
 {
-    ui->pushButtonStop->setEnabled(false);
-    ui->pushButtonPlay->setEnabled(true);
+    ui->pushButtonStop->setEnabled(true);
+    ui->pushButtonPause->setEnabled(true);
+    ui->pushButtonPlay->setEnabled(false);
 }
 
 
 void MainWindow::setDeviseStopUIState(void)
 {
-    ui->pushButtonStop->setEnabled(true);
-    ui->pushButtonPlay->setEnabled(false);
+    ui->pushButtonStop->setEnabled(false);
+    ui->pushButtonPause->setEnabled(false);
+    ui->pushButtonPlay->setEnabled(true);
 }
+
+
+void MainWindow::setDevisePauseUIState(void)
+{
+    ui->pushButtonStop->setEnabled(true);
+    ui->pushButtonPause->setEnabled(false);
+    ui->pushButtonPlay->setEnabled(true);
+}
+
 
 
 void MainWindow::messageErrorWindowShow(QString errorString)
@@ -149,18 +165,15 @@ void MainWindow::sendFrame()
 {
     size_t fileSize = 0;
     // read next frame from video and send to protocol class
-    QString framePath = playState.path + QString::number(playState.orderNumber) + FRAME_EXTENTION;
+    QString framePath = playerState.path + QString::number(playerState.frameNumber) + FRAME_EXTENTION;
     qDebug()<<"Current frame path:"<< framePath;
     FILE *frameFile = fopen(framePath.toUtf8(),"rb");
     if(frameFile == NULL)
     {
         qDebug()<<"Error Or last video frame was reading";
-        setDeviseStopUIState();
-        playState.playState =false;
-        frameTimer->stop();
+        playerProcessing(PLAYER_STOP);
         return;
     }
-    playState.playState =true;
     // get size of file
     //fseek(frameFile, 0, SEEK_END);
     //fileSize = ftell(frameFile);
@@ -170,25 +183,7 @@ void MainWindow::sendFrame()
     fread((uint8_t*)videoFrame.data(), sizeof(uint8_t), 32768, frameFile);
     fclose(frameFile);
     mcsProtocol->sendFrameCommand(videoFrame, 32768);
-    playState.orderNumber++;
-}
-
-
-void MainWindow::on_pushButtonPlay_clicked()
-{
-    playState.orderNumber = 0;
-    playState.path = QDir::currentPath() + FRAME_FILE_NAME;
-    qDebug()<<playState.path;
-    sendFrame();
-    frameTimer->start();
-    setDevisePlayUIState();
-}
-
-
-void MainWindow::on_pushButtonStop_clicked()
-{
-    setDeviseStopUIState();
-    frameTimer->stop();
+    playerState.frameNumber++;
 }
 
 
@@ -202,12 +197,134 @@ void MainWindow::on_pushButton_clicked()
     system(runPythonStr.toLocal8Bit());
 }
 
-void MainWindow::on_pushButtonFrameByFrame_clicked()
-{
 
+void MainWindow::on_pushButtonPlay_clicked()
+{
+    playerProcessing(PLAYER_PLAY);
 }
+
+
+void MainWindow::on_pushButtonStop_clicked()
+{
+     playerProcessing(PLAYER_STOP);
+}
+
 
 void MainWindow::on_pushButtonPause_clicked()
 {
-
+    playerProcessing(PLAYER_PAUSE);
 }
+
+
+void MainWindow::on_pushButtonFrameByFrame_clicked()
+{
+    playerProcessing(PLAYER_FbyF);
+}
+
+
+void MainWindow::playerPlay(void)
+{
+    playerState.state = PLAYER_PLAY;
+    if(playerState.frameNumber == 0)
+    {
+        playerState.path = QDir::currentPath() + FRAME_FILE_NAME;
+    }
+    frameTimer->start();
+    sendFrame();
+    setDevisePlayUIState();
+}
+
+void MainWindow::playerStop(void)
+{
+    playerState.state = PLAYER_STOP;
+    playerState.frameNumber = 0;
+    frameTimer->stop();
+    setDeviseStopUIState();
+}
+
+void MainWindow::playerPause(void)
+{
+    playerState.state = PLAYER_PAUSE;
+    frameTimer->stop();
+    setDeviseStopUIState();
+}
+
+
+void MainWindow::playerPlayFrame(void)
+{
+    playerState.state = PLAYER_FbyF;
+    if(playerState.frameNumber == 0)
+    {
+        playerState.path = QDir::currentPath() + FRAME_FILE_NAME;
+    }
+    frameTimer->stop();
+    sendFrame();
+    setDevisePlayUIState();
+}
+
+
+void MainWindow::playerProcessing(playerStateT newState)
+{
+     switch(playerState.state)
+     {
+     case PLAYER_STOP:
+         switch(newState)
+         {
+         case PLAYER_STOP: break;
+         case PLAYER_PAUSE: break;
+         case PLAYER_PLAY:
+             playerPlay();
+             break;
+         case PLAYER_FbyF:
+             playerPlayFrame();
+             break;
+         }
+
+         break;
+     case PLAYER_PAUSE:
+         switch(newState)
+         {
+         case PLAYER_STOP:
+             playerStop();
+             break;
+         case PLAYER_PAUSE: break;
+         case PLAYER_PLAY:
+             playerPlay();
+             break;
+         case PLAYER_FbyF:
+             playerPlayFrame();
+             break;
+         }
+         break;
+     case PLAYER_PLAY:
+         switch(newState)
+         {
+         case PLAYER_STOP:
+             playerStop();
+             break;
+         case PLAYER_PAUSE:
+             playerPause();
+             break;
+         case PLAYER_PLAY: break;
+         case PLAYER_FbyF:
+             playerPause();
+             break;
+         }
+         break;
+     case PLAYER_FbyF:
+         switch(newState)
+         {
+         case PLAYER_STOP: break;
+             playerStop();
+         case PLAYER_PAUSE: break;
+         case PLAYER_PLAY:
+             playerPlay();
+             break;
+         case PLAYER_FbyF:
+             playerPlayFrame();
+             break;
+         }
+         break;
+     }
+}
+

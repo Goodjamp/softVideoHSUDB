@@ -12,7 +12,7 @@
 sendFrameProtocolClass::sendFrameProtocolClass()
 {
     timerRxResp = new QTimer(this);
-    timerRxResp->setInterval(20);
+    timerRxResp->setInterval(200);
     connect(timerRxResp, &QTimer::timeout, this, &sendFrameProtocolClass::slotCommandRxRespTimeout);
 }
 

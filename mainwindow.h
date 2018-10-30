@@ -22,6 +22,35 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private:
+
+    typedef  enum
+    {
+        PLAYER_STOP,
+        PLAYER_PAUSE,
+        PLAYER_PLAY,
+        PLAYER_FbyF,
+    }playerStateT;
+
+    Ui::MainWindow     *ui;
+
+    hidInterface       *userHID;
+
+    sendFrameProtocolClass   *mcsProtocol;
+
+    QTimer *frameTimer;
+
+    communicationClass *mcsTransport;
+
+    struct{
+        QString      path;
+        uint32_t     frameNumber;
+        playerStateT state;
+    }playerState;
+
+    //address of first register in READ_REGISTER command
+    int  readRegAddress;
+
 private slots:
     void on_pushButtonOpenDevice_clicked();
 
@@ -55,30 +84,22 @@ private:
 
     void setDeviseStopUIState(void);
 
+    void setDevisePauseUIState(void);
+
     void sendFrame();
 
     void frameSendTimeout();
 
-private:
+    void playerProcessing(playerStateT newState);
 
-    Ui::MainWindow     *ui;
+    void playerPlay(void);
 
-    hidInterface       *userHID;
+    void playerStop(void);
 
-    sendFrameProtocolClass   *mcsProtocol;
+    void playerPause(void);
 
-    QTimer *frameTimer;
+    void playerPlayFrame(void);
 
-    communicationClass *mcsTransport;
-
-    struct{
-        QString  path;
-        uint32_t orderNumber;
-        bool     playState;
-    }playState;
-
-    //address of first register in READ_REGISTER command
-    int  readRegAddress;
 };
 
 #endif // MAINWINDOW_H

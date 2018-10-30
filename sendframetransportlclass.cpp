@@ -23,9 +23,6 @@ uint32_t sendFrameTransportlClass::fillPacket(uint8_t *buffer, uint8_t *data, ui
 }
 
 
-#include "stdio.h"
-
-
 void sendFrameTransportlClass::process(QVector<uint8_t> command)
 {
     uint32_t sizeTx;
