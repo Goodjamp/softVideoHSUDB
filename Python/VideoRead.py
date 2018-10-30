@@ -54,8 +54,8 @@ while True:
     #convert RGB to 565 format
     for i in range(len(r)):
         for k in range(len(r[i])):
-            rgb565A.append(((((g[i][k]<<3)>>5)<<5) | (b[i][k]>>3)) & 255)  
             rgb565A.append((((r[i][k]>>3)<<3) | (g[i][k]>>5)) & 255)
+            rgb565A.append(((((g[i][k]<<3)>>5)<<5) | (b[i][k]>>3)) & 255)            
     print("cnt = ", cntFrame)
     #print("rez = ", rgb565A)
 

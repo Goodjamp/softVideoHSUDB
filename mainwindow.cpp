@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     /*************STACK INITILISATION******************************/
     frameTimer = new QTimer(this);
-    frameTimer->setInterval(40);
+    frameTimer->setInterval(33);
     connect(frameTimer, &QTimer::timeout, this, &MainWindow::frameSendTimeout);
 }
 
@@ -75,6 +75,7 @@ void MainWindow::setDeviseOpenUIState(void)
 {
     ui->pushButtonOpenDevice->setEnabled(false);
     ui->pushButtonCloseDevice->setEnabled(true);
+    ui->pushButtonFrameByFrame->setEnabled(true);
     setDeviseStopUIState();
 }
 
@@ -149,6 +150,7 @@ void MainWindow::on_pushButtonOpenDevice_clicked()
         return;
     }
     setDeviseOpenUIState();
+    playerState.state = PLAYER_STOP;
     // run transport protocol
     mcsTransport->start();
 }
@@ -246,7 +248,7 @@ void MainWindow::playerPause(void)
 {
     playerState.state = PLAYER_PAUSE;
     frameTimer->stop();
-    setDeviseStopUIState();
+    setDevisePauseUIState();
 }
 
 
@@ -259,7 +261,7 @@ void MainWindow::playerPlayFrame(void)
     }
     frameTimer->stop();
     sendFrame();
-    setDevisePlayUIState();
+    setDevisePauseUIState();
 }
 
 

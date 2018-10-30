@@ -52,10 +52,10 @@ void sendFrameTransportlClass::process(QVector<uint8_t> command)
     while(true)
     {   
         rezNumTx = comInterface->write(reqCommand.buffer, PACKET_SIZE, TRANSACTION_TIMEOUT);
-        qDebug()<<"Packet Number = "<< reqCommand.packet->packetNumber<<"Num Tx ="<<rezNumTx;
+        //qDebug()<<"Packet Number = "<< reqCommand.packet->packetNumber<<"Num Tx ="<<rezNumTx;
         if( rezNumTx < sizeTx)
         {
-            qDebug()<<"Packet Number = "<< reqCommand.packet->packetNumber<<"Num Tx ="<<rezNumTx;
+           //qDebug()<<"Packet Number = "<< reqCommand.packet->packetNumber<<"Num Tx ="<<rezNumTx;
             return;           
         }        
         /*

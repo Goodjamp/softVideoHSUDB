@@ -250,8 +250,7 @@ uint32_t hidInterface::read(uint8_t *buff, uint32_t numToRead, uint32_t timeout)
      return 0;
 }
 
-//hidInterface
-//userHIDInterfaces
+
 uint32_t hidInterface::write(uint8_t *buff, uint32_t numToWrite, uint32_t timeout)
 {
      if(currentHID == NULL)
@@ -263,14 +262,14 @@ uint32_t hidInterface::write(uint8_t *buff, uint32_t numToWrite, uint32_t timeou
      uint8_t *buffCommand = (uint8_t*)malloc(numToWrite + 1);
      buffCommand[0] = 0;
      memcpy( &buffCommand[1], buff, numToWrite);
-     qDebug()<<"numToWrite = "<< numToWrite;;
+     //qDebug()<<"numToWrite = "<< numToWrite;;
      if( WriteFile(currentHID, buffCommand, numToWrite + 1, &numBytesOfWrite, NULL) > 0)
      {
          free(buffCommand);
-         qDebug()<<"write Ok";
+         //qDebug()<<"write Ok";
          return numBytesOfWrite;
      }
-     qDebug()<<"write Error";
+     //qDebug()<<"write Error";
      DWORD lastError = GetLastError();
      free(buffCommand);
      return 0;
