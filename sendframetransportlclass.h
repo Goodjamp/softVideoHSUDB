@@ -9,7 +9,7 @@
 
 #include "hidInterface.h"
 
-#define PACKET_SIZE              512U
+#define PACKET_SIZE              1024U
 #define TRANSACTION_TIMEOUT      2
 
 class sendFrameTransportlClass: public QObject

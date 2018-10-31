@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(frameTimer, &QTimer::timeout, this, &MainWindow::frameSendTimeout);
 }
 
+
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -76,6 +77,7 @@ void MainWindow::setDeviseOpenUIState(void)
     ui->pushButtonOpenDevice->setEnabled(false);
     ui->pushButtonCloseDevice->setEnabled(true);
     ui->pushButtonFrameByFrame->setEnabled(true);
+    ui->pushButtonWriteFlash->setEnabled(true);
     setDeviseStopUIState();
 }
 
@@ -88,6 +90,7 @@ void MainWindow::setDeviseCloseUIState(void)
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonFrameByFrame->setEnabled(false);
+    ui->pushButtonWriteFlash->setEnabled(false);
 }
 
 
@@ -115,7 +118,6 @@ void MainWindow::setDevisePauseUIState(void)
 }
 
 
-
 void MainWindow::messageErrorWindowShow(QString errorString)
 {
     QMessageBox messageBox;
@@ -124,8 +126,6 @@ void MainWindow::messageErrorWindowShow(QString errorString)
     messageBox.setModal(true);
     messageBox.show();
 }
-
-
 
 
 void MainWindow::slotReadRegisters(sendFrameProtocolClass::STATUS_RES statusResp, QVector<uint8_t> registers)
@@ -177,14 +177,14 @@ void MainWindow::sendFrame()
         return;
     }
     // get size of file
-    //fseek(frameFile, 0, SEEK_END);
-    //fileSize = ftell(frameFile);
-    //fseek(frameFile, 0, SEEK_SET);
-    //qDebug()<<"frame open close OK, file size = "<<fileSize;
-    static QVector<uint8_t> videoFrame(32768);
-    fread((uint8_t*)videoFrame.data(), sizeof(uint8_t), 32768, frameFile);
+    fseek(frameFile, 0, SEEK_END);
+    fileSize = ftell(frameFile);
+    fseek(frameFile, 0, SEEK_SET);
+    qDebug()<<"frame open close OK, file size = "<<fileSize;
+    static QVector<uint8_t> videoFrame(fileSize);
+    fread((uint8_t*)videoFrame.data(), sizeof(uint8_t), fileSize, frameFile);
     fclose(frameFile);
-    mcsProtocol->sendFrameCommand(videoFrame, 32768);
+    mcsProtocol->sendFrameCommand(videoFrame, fileSize);
     playerState.frameNumber++;
 }
 
@@ -224,6 +224,12 @@ void MainWindow::on_pushButtonFrameByFrame_clicked()
 }
 
 
+void MainWindow::on_pushButtonWriteFlash_clicked()
+{
+
+}
+
+
 void MainWindow::playerPlay(void)
 {
     playerState.state = PLAYER_PLAY;
@@ -236,6 +242,7 @@ void MainWindow::playerPlay(void)
     setDevisePlayUIState();
 }
 
+
 void MainWindow::playerStop(void)
 {
     playerState.state = PLAYER_STOP;
@@ -243,6 +250,7 @@ void MainWindow::playerStop(void)
     frameTimer->stop();
     setDeviseStopUIState();
 }
+
 
 void MainWindow::playerPause(void)
 {
@@ -316,8 +324,9 @@ void MainWindow::playerProcessing(playerStateT newState)
      case PLAYER_FbyF:
          switch(newState)
          {
-         case PLAYER_STOP: break;
+         case PLAYER_STOP:
              playerStop();
+             break;
          case PLAYER_PAUSE: break;
          case PLAYER_PLAY:
              playerPlay();
@@ -329,4 +338,3 @@ void MainWindow::playerProcessing(playerStateT newState)
          break;
      }
 }
-

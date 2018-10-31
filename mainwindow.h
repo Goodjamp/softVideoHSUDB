@@ -73,6 +73,8 @@ private slots:
 
     void on_pushButtonPause_clicked();
 
+    void on_pushButtonWriteFlash_clicked();
+
 private:
     void messageErrorWindowShow(QString errorString);
 
