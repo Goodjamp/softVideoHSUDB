@@ -30,6 +30,7 @@ private:
         PLAYER_PAUSE,
         PLAYER_PLAY,
         PLAYER_FbyF,
+        PLAYER_WRITE_FLASH,
     }playerStateT;
 
     Ui::MainWindow     *ui;
@@ -43,6 +44,7 @@ private:
     communicationClass *mcsTransport;
 
     struct{
+        uint16_t     totalFrameNumber;
         QString      path;
         uint32_t     frameNumber;
         playerStateT state;
@@ -75,6 +77,8 @@ private slots:
 
     void on_pushButtonWriteFlash_clicked();
 
+    void on_checkBoxWriteFlash_stateChanged(int arg1);
+
 private:
     void messageErrorWindowShow(QString errorString);
 
@@ -88,7 +92,7 @@ private:
 
     void setDevisePauseUIState(void);
 
-    void sendFrame();
+    void sendFrame(sendFrameProtocolClass::fieldTargetT target);
 
     void frameSendTimeout();
 
@@ -101,6 +105,10 @@ private:
     void playerPause(void);
 
     void playerPlayFrame(void);
+
+    void calcFrameQuantity(QString videoPath);
+
+    void writeFlash(void);
 
 };
 

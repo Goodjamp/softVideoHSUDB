@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // button activity
     setDeviseCloseUIState();
+    ui->pushButtonWriteFlash->setEnabled(false);
 
     /*************INITILISATION COMMUNICATION INTERFACE**************/
 
@@ -49,7 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     /*************STACK INITILISATION******************************/
     frameTimer = new QTimer(this);
-    frameTimer->setInterval(33);
     connect(frameTimer, &QTimer::timeout, this, &MainWindow::frameSendTimeout);
 }
 
@@ -63,11 +63,13 @@ MainWindow::~MainWindow()
 void MainWindow::frameSendTimeout()
 {
     frameTimer->stop();
-    if(playerState.state != PLAYER_PLAY)
+    if(playerState.state != PLAYER_PLAY && playerState.state != PLAYER_WRITE_FLASH)
     {
         return;
     }
-    sendFrame();
+    sendFrame((playerState.state =  PLAYER_PLAY) ?
+                sendFrameProtocolClass::DIRECT :
+                sendFrameProtocolClass::FLASH  );
     frameTimer->start();
 }
 
@@ -77,7 +79,6 @@ void MainWindow::setDeviseOpenUIState(void)
     ui->pushButtonOpenDevice->setEnabled(false);
     ui->pushButtonCloseDevice->setEnabled(true);
     ui->pushButtonFrameByFrame->setEnabled(true);
-    ui->pushButtonWriteFlash->setEnabled(true);
     setDeviseStopUIState();
 }
 
@@ -90,7 +91,6 @@ void MainWindow::setDeviseCloseUIState(void)
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonFrameByFrame->setEnabled(false);
-    ui->pushButtonWriteFlash->setEnabled(false);
 }
 
 
@@ -163,7 +163,7 @@ void MainWindow::on_pushButtonCloseDevice_clicked()
 }
 
 
-void MainWindow::sendFrame()
+void MainWindow::sendFrame(sendFrameProtocolClass::fieldTargetT target)
 {
     size_t fileSize = 0;
     // read next frame from video and send to protocol class
@@ -184,8 +184,24 @@ void MainWindow::sendFrame()
     static QVector<uint8_t> videoFrame(fileSize);
     fread((uint8_t*)videoFrame.data(), sizeof(uint8_t), fileSize, frameFile);
     fclose(frameFile);
-    mcsProtocol->sendFrameCommand(videoFrame, fileSize);
+    mcsProtocol->sendFrameCommand(playerState.frameNumber, playerState.totalFrameNumber, videoFrame, target);
     playerState.frameNumber++;
+}
+
+
+void MainWindow::calcFrameQuantity(QString videoPath)
+{
+    playerState.totalFrameNumber = 0;
+    QString framePath = videoPath + QString::number(playerState.totalFrameNumber) + FRAME_EXTENTION;
+    FILE *frameFile = fopen(framePath.toUtf8(),"rb");
+    while(frameFile != NULL)
+    {
+        fclose(frameFile);
+        playerState.totalFrameNumber++;
+        framePath = videoPath + QString::number(playerState.totalFrameNumber) + FRAME_EXTENTION;
+        frameFile = fopen(framePath.toUtf8(),"rb");
+    }
+    qDebug()<<"Total frame number = "<< playerState.totalFrameNumber;
 }
 
 
@@ -224,9 +240,36 @@ void MainWindow::on_pushButtonFrameByFrame_clicked()
 }
 
 
+
 void MainWindow::on_pushButtonWriteFlash_clicked()
 {
+    playerProcessing(PLAYER_WRITE_FLASH);
+}
 
+
+void MainWindow::on_checkBoxWriteFlash_stateChanged(int arg1)
+{
+    if(ui->checkBoxWriteFlash->isChecked())
+    {
+        ui->pushButtonWriteFlash->setEnabled(true);
+    }
+    else
+    {
+        ui->pushButtonWriteFlash->setEnabled(false);
+    }
+}
+
+
+void MainWindow::writeFlash(void)
+{
+    playerState.state = PLAYER_WRITE_FLASH;
+    playerState.frameNumber = 0;
+    playerState.path = QDir::currentPath() + FRAME_FILE_NAME;
+    frameTimer->setInterval(400);
+    frameTimer->start();
+    calcFrameQuantity(playerState.path);
+    sendFrame(sendFrameProtocolClass::FLASH);
+    setDevisePlayUIState();
 }
 
 
@@ -237,8 +280,10 @@ void MainWindow::playerPlay(void)
     {
         playerState.path = QDir::currentPath() + FRAME_FILE_NAME;
     }
+    frameTimer->setInterval(32);
     frameTimer->start();
-    sendFrame();
+    calcFrameQuantity(playerState.path);
+    sendFrame(sendFrameProtocolClass::DIRECT);
     setDevisePlayUIState();
 }
 
@@ -268,9 +313,11 @@ void MainWindow::playerPlayFrame(void)
         playerState.path = QDir::currentPath() + FRAME_FILE_NAME;
     }
     frameTimer->stop();
-    sendFrame();
+    sendFrame(sendFrameProtocolClass::DIRECT);
     setDevisePauseUIState();
 }
+
+
 
 
 void MainWindow::playerProcessing(playerStateT newState)
@@ -288,6 +335,9 @@ void MainWindow::playerProcessing(playerStateT newState)
          case PLAYER_FbyF:
              playerPlayFrame();
              break;
+         case PLAYER_WRITE_FLASH:
+             writeFlash();
+             break;
          }
 
          break;
@@ -304,6 +354,8 @@ void MainWindow::playerProcessing(playerStateT newState)
          case PLAYER_FbyF:
              playerPlayFrame();
              break;
+         case PLAYER_WRITE_FLASH:
+             break;
          }
          break;
      case PLAYER_PLAY:
@@ -319,6 +371,8 @@ void MainWindow::playerProcessing(playerStateT newState)
          case PLAYER_FbyF:
              playerPause();
              break;
+         case PLAYER_WRITE_FLASH:
+             break;
          }
          break;
      case PLAYER_FbyF:
@@ -333,6 +387,25 @@ void MainWindow::playerProcessing(playerStateT newState)
              break;
          case PLAYER_FbyF:
              playerPlayFrame();
+             break;
+         case PLAYER_WRITE_FLASH:
+             break;
+         }
+         break;
+     case PLAYER_WRITE_FLASH:
+         switch(newState)
+         {
+         case PLAYER_STOP:
+             //writeFlash();
+             break;
+         case PLAYER_PAUSE: break;
+         case PLAYER_PLAY:
+             //playerPlay();
+             break;
+         case PLAYER_FbyF:
+             //playerPlayFrame();
+             break;
+         case PLAYER_WRITE_FLASH:
              break;
          }
          break;

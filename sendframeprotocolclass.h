@@ -9,7 +9,6 @@
 #include <QTimer>
 
 #include "sendframetransportlclass.h"
-#define START_IND_SUMBOL  "START"
 
 class sendFrameProtocolClass: public QObject
 {
@@ -25,8 +24,23 @@ public:
         STATUS_RES_COMMUNICATION_ERROR,
     }STATUS_RES;
 
+    typedef enum
+    {
+        DIRECT = (uint8_t)0,
+        FLASH  = (uint8_t)1,
+    }fieldTargetT;
+
+    typedef enum
+    {
+        FLASH_WRITE = (uint8_t)0,
+        FLASH_PLAY  = (uint8_t)1,
+        FLASH_STOP  = (uint8_t)2,
+    }fieldSubTargetT;
+
+
     /****************LIST OF COMMAND*********************/
-    bool sendFrameCommand(QVector<uint8_t> frame, uint32_t frameSize);
+    bool sendFrameCommand(uint16_t frameNumber,  uint16_t frameQuantity, QVector<uint8_t> frame, fieldTargetT target);
+    bool sendControlCommand(fieldSubTargetT controllType );
 
 signals:
     //signal to next level
@@ -46,7 +60,10 @@ private:
     #pragma pack(push,1)
     typedef struct
     {
-        uint8_t commandMarker[sizeof(START_IND_SUMBOL) - 1];
+        uint8_t target;
+        uint8_t subTarget;
+        uint16_t frameNumber;
+        uint16_t frameQuantity;
         uint32_t size;
         uint8_t payload[];
     } sendFrameCommandT;

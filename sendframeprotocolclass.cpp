@@ -45,8 +45,13 @@ void sendFrameProtocolClass::slotCommandRxResp(bool status, QVector<uint8_t> res
 
 }
 
+bool sendFrameProtocolClass::sendControlCommand(fieldSubTargetT controllType )
+{
 
-bool sendFrameProtocolClass::sendFrameCommand(QVector<uint8_t> frame, uint32_t frameSize)
+}
+
+
+bool sendFrameProtocolClass::sendFrameCommand(uint16_t frameNumber,  uint16_t frameQuantity, QVector<uint8_t> frame, fieldTargetT target)
 {
     if(timerRxResp->isActive())
     {
@@ -59,12 +64,14 @@ bool sendFrameProtocolClass::sendFrameCommand(QVector<uint8_t> frame, uint32_t f
         uint8_t           *buffer;
     }reqCommand =
     {
-        .buffer = videoFrame.begin()
+        .buffer = static_cast<uint8_t*>(videoFrame.begin())
     };
-
-    reqCommand.packet->size = frameSize;
-    memcpy(reqCommand.packet->commandMarker, START_IND_SUMBOL, strlen(START_IND_SUMBOL));
-    memcpy(reqCommand.packet->payload, (uint8_t*)frame.begin(), frameSize);
+    reqCommand.packet->target        = target;
+    reqCommand.packet->subTarget     = sendFrameProtocolClass::FLASH_WRITE;
+    reqCommand.packet->frameNumber   = frameNumber;
+    reqCommand.packet->frameQuantity = frameQuantity;
+    reqCommand.packet->size          = frame.size();
+    memcpy(reqCommand.packet->payload, (uint8_t*)frame.begin(), frame.size());
 
     currentProcessCommand = SEND_FRAME;
 
