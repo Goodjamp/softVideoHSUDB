@@ -46,7 +46,7 @@ private:
     struct{
         uint16_t     totalFrameNumber;
         QString      path;
-        uint32_t     frameNumber;
+        uint16_t     frameNumber;
         playerStateT state;
     }playerState;
 
@@ -93,6 +93,8 @@ private:
     void setDevisePauseUIState(void);
 
     void sendFrame(sendFrameProtocolClass::fieldTargetT target);
+
+    void sendControll(sendFrameProtocolClass::fieldTargetT target);
 
     void frameSendTimeout();
 

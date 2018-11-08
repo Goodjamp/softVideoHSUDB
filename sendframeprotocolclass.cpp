@@ -47,7 +47,27 @@ void sendFrameProtocolClass::slotCommandRxResp(bool status, QVector<uint8_t> res
 
 bool sendFrameProtocolClass::sendControlCommand(fieldSubTargetT controllType )
 {
+    if(timerRxResp->isActive())
+    {
+        return false;
+    }
+    QVector<uint8_t> controllFrame(sizeof(sendFrameCommandT));
+    union
+    {
+        sendFrameCommandT *packet;
+        uint8_t           *buffer;
+    }reqCommand =
+    {
+        .buffer = static_cast<uint8_t*>(controllFrame.begin())
+    };
+    reqCommand.packet->target        = FLASH;
+    reqCommand.packet->subTarget     = controllType;
 
+    currentProcessCommand = SEND_FRAME;
+
+    sendToTransport(controllFrame);
+
+    return true;
 }
 
 
